@@ -62,9 +62,55 @@ class Queries
 
     db.get_first_value(query, start_year, end_year)
   end
+
+  def artist_with_most_releases
+    query = <<-QUERY
+      SELECT artist, count(title) AS release_count
+      FROM albums
+      GROUP BY artist
+      ORDER BY release_count DESC
+      LIMIT 1;
+    QUERY
+
+    db.get_first_value(query)
+  end
+
+  def most_by_year
+    query = <<-QUERY
+      SELECT released, count(*) AS release_count
+      FROM albums
+      GROUP BY released
+      ORDER BY release_count DESC
+      LIMIT 1;
+    QUERY
+
+    db.get_first_row(query)
+  end
+
+  def years_missing(start_year, end_year)
+    query = <<-QUERY
+      SELECT DISTINCT released
+      FROM albums;
+    QUERY
+
+    rows  = db.execute(query)
+    years = rows.flatten
+    (start_year..end_year).to_a - years
+  end
 end
 
 query_object = Queries.new
+
+puts "Bonus questions!"
+# Which artist has the most albums in the collection?
+puts "Bonus 1: #{ query_object.artist_with_most_releases } has the most releases."
+
+# Which year has the most releases? How many albums were released in that year?
+puts "Bonus 2: #{ query_object.most_by_year }"
+
+# What years between 1960 and 2010 have zero releases?
+puts "Bonus 3: #{ query_object.years_missing(1960, 2010) }"
+
 
 # How many albums are in the collection?
 puts "Answer 1: There are #{ query_object.count_releases } albums in the collection."
@@ -86,7 +132,6 @@ puts "Answer 6: #{ query_object.added_in(2014) }"
 
 # How many albums were released between 1970 and 1979?
 puts "Answer 7: #{ query_object.released_between(1970, 1979) }"
-
 
 
 
